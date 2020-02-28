@@ -63,6 +63,12 @@ public class Robot extends TimedRobot {
      //I2C.Port i2cPort = I2C.Port.kOnboard;
      //ColorSensorV3 colorSensor = new ColorSensorV3(i2cPort);
      
+     Mat ballMat;
+     int cameraWidth = 640;
+     int cameraHeight = 480;
+     Mat cameraMatrix;
+     Mat distCoeffs;
+     
      @Override
      public void robotInit() {
          //Drive Train
@@ -85,6 +91,18 @@ public class Robot extends TimedRobot {
          encoder1.reset();
          encoder2 = new Encoder(2,3);
          encoder2.reset();
+      
+         FindBall.readCalibrationData("calib.txt", cameraMatrix, distCoeffs);
+          
+         // https://docs.wpilib.org/en/latest/docs/software/vision-processing/introduction/using-the-cameraserver-on-the-roborio.html
+         new Thread(() -> {
+             UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+             camera.setResolution(cameraWidth, cameraHeight);
+             CvSink cvSink = CameraServer.getInstance().getVideo();
+             while(!Thread.interrupted()) {
+               if(cvSink.grabFrame(ballMat) == 0) { continue; }
+             }
+         }).start();
      }
 
      @Override
@@ -128,7 +146,7 @@ public class Robot extends TimedRobot {
          }
         return colorString;
      }*/
-
+     
      @Override
      public void teleopPeriodic() {
 
@@ -204,7 +222,7 @@ public class Robot extends TimedRobot {
          //Possible align to ball
          double rangeForBall = 10;
          if (joystick1.getRawButton(3) || joystick1.getRawButton(5)){
-           double degreesForBall = /*getBallValue()*/ 0;
+           double degreesForBall = getBallValue(ballMat, cameraWidth, cameraHeight, cameraMatrix, distCoeffs);
            if (degreesForBall >= rangeForBall){
               joystickLValue = -0.25;
               joystickRValue = 0.25;
@@ -217,7 +235,7 @@ public class Robot extends TimedRobot {
          //Possible allign to target
          double rangeForTarget = 2;
          if (joystick1.getRawButton(4) || joystick1.getRawButton(6)){
-            double degreesForTarget = /*getTargetValue()*/ 0;
+            double degreesForTarget = FindTarget.getAngleFrontPortValue();
             if (degreesForTarget >= rangeForTarget) {
                joystickLValue = -0.25;
                joystickRValue = 0.25;
