@@ -95,8 +95,12 @@ public class Robot extends TimedRobot {
          encoder2 = new Encoder(2,3);
          encoder2.reset();
           
-         FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs);
           
+         // Vision
+          
+         FindTarget.setup();
+          
+         FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs);
          new Thread(() -> {
            UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
            camera.setResolution(WIDTH, HEIGHT);
@@ -241,7 +245,7 @@ public class Robot extends TimedRobot {
          //Possible allign to target
          double rangeForTarget = 2;
          if (joystick1.getRawButton(4) || joystick1.getRawButton(6)){
-            double degreesForTarget = /*getTargetValue()*/ 0;
+            double degreesForTarget = FindTarget.getAngleFrontPortValue(); // TODO: if it works well, replace with FindTarget.getAngleBackPortValue();
             if (degreesForTarget >= rangeForTarget) {
                joystickLValue = -0.25;
                joystickRValue = 0.25;
