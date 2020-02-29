@@ -67,12 +67,13 @@ public class Robot extends TimedRobot {
      //I2C.Port i2cPort = I2C.Port.kOnboard;
      //ColorSensorV3 colorSensor = new ColorSensorV3(i2cPort);
      
-     Mat cameraMatrix, distCoeffs;
-     
+     static Mat cameraMatrix, distCoeffs;
      static double ballValue = 0d;
+     static final int WIDTH = 1080;
+     static final int HEIGHT = 720;
      
-     public static final int WIDTH = 1080;
-     public static final int HEIGHT = 720;
+     static UsbCamera camera;
+     static CvSink cvSink;
      
      @Override
      public void robotInit() {
@@ -99,20 +100,18 @@ public class Robot extends TimedRobot {
           
           
          // Vision
-          
          FindTarget.setup();
-          
-         FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs);
+         FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", Robot.cameraMatrix, Robot.distCoeffs);
          new Thread(() -> {
-           UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
-           camera.setResolution(WIDTH, HEIGHT);
-           CvSink cvSink = CameraServer.getInstance().getVideo();
+           Robot.camera = CameraServer.getInstance().startAutomaticCapture();
+           Robot.camera.setResolution(Robot.WIDTH, Robot.HEIGHT);
+           Robot.cvSink = CameraServer.getInstance().getVideo();
            Mat source = new Mat();
            while(!Thread.interrupted()) {
-             if (cvSink.grabFrame(source) == 0) {
+             if (Robot.cvSink.grabFrame(source) == 0) {
                continue;
              }
-             ballValue = FindBall.getBallValue(source, WIDTH, HEIGHT, cameraMatrix, distCoeffs);
+             Robot.ballValue = FindBall.getBallValue(source, Robot.WIDTH, Robot.HEIGHT, Robot.cameraMatrix, Robot.distCoeffs);
            }
          }).start();
      }
