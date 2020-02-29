@@ -20,6 +20,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.DriverStation;
 
+import org.opencv.core.Mat;
+
 import com.revrobotics.ColorSensorV3;
 
 public class Robot extends TimedRobot {
@@ -63,6 +65,13 @@ public class Robot extends TimedRobot {
      //I2C.Port i2cPort = I2C.Port.kOnboard;
      //ColorSensorV3 colorSensor = new ColorSensorV3(i2cPort);
      
+     Mat cameraMatrix, distCoeffs;
+     
+     static double ballValue = 0d;
+     
+     public static final int WIDTH = 1080;
+     public static final int HEIGHT = 720;
+     
      @Override
      public void robotInit() {
          //Drive Train
@@ -85,6 +94,21 @@ public class Robot extends TimedRobot {
          encoder1.reset();
          encoder2 = new Encoder(2,3);
          encoder2.reset();
+          
+         FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs);
+          
+         new Thread(() -> {
+           UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+           camera.setResolution(WIDTH, HEIGHT);
+           CvSink cvSink = CameraServer.getInstance().getVideo();
+           Mat source = new Mat();
+           while(!Thread.interrupted()) {
+             if (cvSink.grabFrame(source) == 0) {
+               continue;
+             }
+             ballValue = FindBall.getBallValue(source, WIDTH, HEIGHT, cameraMatrix, distCoeffs);
+           }
+         }).start();
      }
 
      @Override
@@ -204,7 +228,7 @@ public class Robot extends TimedRobot {
          //Possible align to ball
          double rangeForBall = 10;
          if (joystick1.getRawButton(3) || joystick1.getRawButton(5)){
-           double degreesForBall = /*getBallValue()*/ 0;
+           double degreesForBall = ballValue;
            if (degreesForBall >= rangeForBall){
               joystickLValue = -0.25;
               joystickRValue = 0.25;
