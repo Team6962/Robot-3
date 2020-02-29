@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.DriverStation;
 
 import org.opencv.core.Mat;
+import frc.robot.FindBall;
+import frc.robot.FindTarget;
 
 import com.revrobotics.ColorSensorV3;
 
