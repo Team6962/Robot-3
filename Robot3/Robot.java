@@ -1,146 +1,108 @@
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
+import com.revrobotics.ColorSensorV3;
+
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.TimedRobot;
-// import edu.wpi.first.wpilibj.networktables.*;
 import edu.wpi.first.wpilibj.VictorSP;
-
-import com.ctre.phoenix.motorcontrol.ControlMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
-import edu.wpi.first.cameraserver.CameraServer;
-import edu.wpi.cscore.UsbCamera;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.I2C;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.DriverStation;
-
-import org.opencv.core.Mat;
-import frc.robot.FindBall;
-import frc.robot.FindTarget;
-
-import com.revrobotics.ColorSensorV3;
+import jdk.swing.interop.DropTargetContextWrapper;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Encoder;
 
 public class Robot extends TimedRobot {
 
-     //Drive
-     DifferentialDrive myDrive;
-     Spark lBank;
-     Spark rBank;
-     boolean calebsTriggerMode;
+  //Joysticks
+    Joystick joystick0;
+    Joystick joystick1;
 
-     //Winch
-     Spark winch;
-     Spark hook;
-     double winchValue;
+  //Motor controllers
+    //Sparks
+      Spark rbank;
+      Spark lbank;
+      Spark elevator;
+      Spark transfer;
+      Spark outtake;
+    //Victors
+      VictorSP drawer;
+      VictorSPX intake;
+      VictorSPX ctrlpnl;
 
-     //Gun
-     Spark shooter;
-     VictorSP drawer;
-     VictorSPX intakeSpinner;
-     Spark transfer;
+  //Drivetrain
+    DifferentialDrive myDrive;
 
-     //Control Panel
-     VictorSPX controlPanelMotor;
+  //User Input Values;
+    double joystickLValue;
+    double joystickRValue;
+    static final double limitTurnSpeed = 0.75;
+    long startDelay = 0;
+    boolean pullIn;
+  //Color Sensor
+    I2C.Port i2cPort = I2C.Port.kOnboard;
+    ColorSensorV3 colorSensor = new ColorSensorV3(i2cPort);
+    int colorCount;
+    String lastColor;
+  //Limit Switches
+    DigitalInput drawerIn;
+    DigitalInput drawerOut;
+    DigitalInput startBelt;
+    DigitalInput stopBelt;
+  //Endcoders
+    Encoder encoder1;
+    Encoder encoder2;
 
-     //Encoders
-     Encoder encoder1;
-     Encoder encoder2;
+  @Override
+  public void robotInit() {
+    //Init Joysticks
+    joystick0 = new Joystick(0);
+    joystick1 = new Joystick(1);
+    //Init Drivetrain
+    rbank = new Spark(0);
+    lbank = new Spark(1);
+    myDrive = new DifferentialDrive( lbank, rbank);
+    //Other Motors
+    transfer = new Spark(2);
+    elevator = new Spark(3);
+    outtake = new Spark(4);
+    drawer = new VictorSP(9);
+    intake = new VictorSPX(10);
+    ctrlpnl = new VictorSPX(20);
+    //Color Sensor
+    lastColor = getColor();
+    //Limit Switches
+    drawerIn = new DigitalInput(9);
+    drawerOut = new DigitalInput(8);
+    startBelt = new DigitalInput(7);
+    stopBelt = new DigitalInput(6);
+    pullIn = false;
+    //Encoders
+    encoder1 = new Encoder(0, 1); //Left Encoder
+    encoder2 = new Encoder(2, 3); //Right Encoder
+  }
 
-     //Joysticks
-     Joystick joystick0 = new Joystick(0);
-     Joystick joystick1 = new Joystick(1);
-     double joystickLValue;
-     double joystickRValue;
-     
-     //Contorl Panel
-     TalonSRX panelMotor;
-     
-     //Color Sensor
-     int colorCount;
-     String lastColor;
-     //I2C.Port i2cPort = I2C.Port.kOnboard;
-     //ColorSensorV3 colorSensor = new ColorSensorV3(i2cPort);
-     
-     static Mat cameraMatrix, distCoeffs;
-     static double ballValue = 0d;
-     static final int WIDTH = 1080;
-     static final int HEIGHT = 720;
-     
-     static UsbCamera camera;
-     static CvSink cvSink;
-     
-     @Override
-     public void robotInit() {
-         //Drive Train
-         rBank = new Spark(0);
-         lBank = new Spark(1);
-         myDrive = new DifferentialDrive(rBank, lBank);
+  @Override
+  public void robotPeriodic() {
+  }
 
-         //Gun
-         intakeSpinner = new VictorSPX(20);
-         transfer = new Spark(2);
-         shooter = new Spark(4);
-         drawer = new VictorSP(6);
+  @Override
+  public void autonomousInit() {
+   
+  }
 
-         //Lift
-         hook = new Spark(3);
-         winch = new Spark(5);
-         
-         //Encoder
-         encoder1 = new Encoder(0,1);
-         encoder1.reset();
-         encoder2 = new Encoder(2,3);
-         encoder2.reset();
-          
-          
-         // Vision
-         FindTarget.setup();
-         FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", Robot.cameraMatrix, Robot.distCoeffs);
-         new Thread(() -> {
-           Robot.camera = CameraServer.getInstance().startAutomaticCapture();
-           Robot.camera.setResolution(Robot.WIDTH, Robot.HEIGHT);
-           Robot.cvSink = CameraServer.getInstance().getVideo();
-           Mat source = new Mat();
-           while(!Thread.interrupted()) {
-             if (Robot.cvSink.grabFrame(source) == 0) {
-               continue;
-             }
-             Robot.ballValue = FindBall.getBallValue(source, Robot.WIDTH, Robot.HEIGHT, Robot.cameraMatrix, Robot.distCoeffs);
-           }
-         }).start();
-     }
+  @Override
+  public void autonomousPeriodic() {
+    if(drawerOut.get()) drawer.set(-0.7);
+    else drawer.set(0);
+  }
 
-     @Override
-     public void autonomousInit() {
-     }
-     /**
-      * This function is called periodically during autonomous
-      */
-     @Override
-     public void autonomousPeriodic() {
-        myDrive.tankDrive(1, 1);
-     }
-     /* What the lines mean below:
-     Each color has a percentage that we calculated via the color sensor & the smart dashboard.
-     After collecting that data, we made it so that the approximated value (the detected one)
-     was compared with the plus and minus of the range, which is defined as double range.
-     
-     An example:
-     If the detected red value from the sensor is less than or equal to 15.51%+the pre-defined range, and greater than
-     or equal to 15.51%-the range.
-     This goes through the red value, green value, and the blue value, if it is true, say that
-     the color is Red on the smart dashboard.
-     
-     This happens for the detection of red, blue, yellow, and green, each with their individual
-     numbers, but the range remains all the same.
-     */
-     /*public String getColor(){
+  public String getColor(){
         String colorString;
         double range = 0.05;
         Color detectedColor = colorSensor.getColor();
@@ -156,122 +118,90 @@ public class Robot extends TimedRobot {
             colorString = "Unknown";
          }
         return colorString;
-     }*/
-
-     @Override
-     public void teleopPeriodic() {
-
-         //Color Sensor
-         // Color detectedColor = colorSensor.getColor();
-         // String colorString = getColor();
-         // DriverStation ds = DriverStation.getInstance();
-
-         // if(!lastColor.equals(colorString) && (colorString == "Red"||colorString == "Blue"||colorString == "Yellow"||colorString == "Green")){
-         //    colorCount++;
-         //    lastColor = colorString;
-         // }
-         
-         // //Essentially put the specified values on the smart dashboard
-         // SmartDashboard.putNumber("Red", detectedColor.red);
-         // SmartDashboard.putNumber("Green", detectedColor.green);
-         // SmartDashboard.putNumber("Blue", detectedColor.blue);
-         // SmartDashboard.putString("Detected Color", colorString);
-         // SmartDashboard.putNumber("colorCount", colorCount);
-         // SmartDashboard.putString("End Color", DriverStation.getInstance().getGameSpecificMessage());
-         // SmartDashboard.putNumber("Encoder", encoder1.getDistance());
-         // SmartDashboard.putNumber("Encoder", encoder2.getDistance());
-
-         // //Drive Train
-         //joystickLValue = (-joystick0.getRawAxis(1) + joystick0.getRawAxis(2));
-         //joystickRValue = (-joystick0.getRawAxis(1) - joystick0.getRawAxis(2));
-         
-         // if (joystick0.getRawAxis(3) > 0.1 || joystick0.getRawAxis(3) < -0.1){
-         //    intakeSpinner.set(ControlMode.PercentOutput, joystick0.getRawAxis(3));
-         // } else {
-         //    intakeSpinner.set(ControlMode.PercentOutput, 0);
-         // }
-
-         // if (joystick0.getRawButton(11)){
-         //    drawer.set(ControlMode.PercentOutput, 0.4);
-         // } else if (joystick0.getRawButton(12)){
-         //    drawer.set(ControlMode.PercentOutput, -0.4);
-         // } else {
-         //    drawer.set(ControlMode.PercentOutput, 0);
-         // }
-
-         //Winch Up/down
-         winchValue = (joystick1.getRawAxis(1));
-         winch.set(winchValue);
-
-         //Hook up and down
-         if (joystick1.getRawButton(1)){
-          hook.set(0.8);
-         } else if (joystick1.getRawButton(2)){
-          hook.set(-0.8);
-         }
-
-         //Fire
-         shooter.set(joystick0.getRawAxis(3));
-         if(joystick0.getRawButton(1)) transfer.set(1);
-         
-         //Intake
-         intakeSpinner.set(ControlMode.PercentOutput, 1);
-
-         // //Automated Spinner
-         // //If there are 32 color changed (~4 rotations),
-         // //it makes the wheel for the control panel no longer spin.
-         // //Otherwise, spin at 1/2 speed. 
-         // if(joystick1.getRawButton(11)) colorCount = 0;
-         // if(colorCount <= 32 && joystick1.getRawButton(7)){
-         //    panelMotor.set(ControlMode.PercentOutput, 0.5);
-         // }else if(joystick1.getRawButton(8) && !colorString.equals(ds.getGameSpecificMessage())){
-         //    panelMotor.set(ControlMode.PercentOutput, 0.5);
-         // }else{
-         //    panelMotor.set(ControlMode.PercentOutput, 0);
-         // }
-
-         //Possible align to ball
-         double rangeForBall = 10;
-         if (joystick1.getRawButton(3) || joystick1.getRawButton(5)){
-           double degreesForBall = ballValue;
-           if (degreesForBall >= rangeForBall){
-              joystickLValue = -0.25;
-              joystickRValue = 0.25;
-           } else if (degreesForBall <= -rangeForBall){
-              joystickLValue = 0.25;
-              joystickRValue = -0.25;
-           }
-         }
-
-         //Possible allign to target
-         double rangeForTarget = 2;
-         if (joystick1.getRawButton(4) || joystick1.getRawButton(6)){
-            double degreesForTarget = FindTarget.getAngleFrontPortValue(); // TODO: if it works well, replace with FindTarget.getAngleBackPortValue();
-            if (degreesForTarget >= rangeForTarget) {
-               joystickLValue = -0.25;
-               joystickRValue = 0.25;
-            } else if (degreesForTarget <= -rangeForTarget) {
-               joystickLValue = 0.25;
-               joystickRValue = -0.25;
-            }
-         }
-         
-         //Reset Encoders
-         if (joystick0.getRawButton(9)){
-            encoder1.reset();
-            encoder2.reset();
-         }
-
-         if(joystick0.getRawButton(11)) calebsTriggerMode = true;
-         if(joystick0.getRawButton(12)) calebsTriggerMode = false;
-         if(calebsTriggerMode) {
-            myDrive.tankDrive(0.6 * joystickLValue, 0.6 * joystickRValue);
-         } else {
-            myDrive.tankDrive(joystickLValue, joystickRValue);
-         }
      }
 
-     @Override
-     public void testPeriodic() {
-     }
+  @Override
+  public void teleopPeriodic() {
+    //Color Sensor
+      Color detectedColor = colorSensor.getColor();
+      String colorString = getColor();
+      DriverStation ds = DriverStation.getInstance();
+
+      if(!lastColor.equals(colorString) && (colorString.equals("Red")||colorString.equals("Blue")||colorString.equals("Yellow")||colorString.equals("Green"))){
+        colorCount++;
+        lastColor = colorString;
+      }
+      
+      //Essentially put the specified values on the smart dashboard
+      SmartDashboard.putNumber("Red", detectedColor.red);
+      SmartDashboard.putNumber("Green", detectedColor.green);
+      SmartDashboard.putNumber("Blue", detectedColor.blue);
+      SmartDashboard.putString("Detected Color", colorString);
+      SmartDashboard.putNumber("colorCount", colorCount);
+      SmartDashboard.putString("End Color", DriverStation.getInstance().getGameSpecificMessage());
+    
+    //Control Panel Manipulator
+    if(joystick1.getRawButton(11)) colorCount = 0;
+    if(colorCount <= 32 && joystick1.getRawButton(7)){
+       ctrlpnl.set(ControlMode.PercentOutput, 0.3);
+    }else if(joystick1.getRawButton(8) && !colorString.equals(ds.getGameSpecificMessage())){
+       ctrlpnl.set(ControlMode.PercentOutput, 0.3);
+    }else{
+       ctrlpnl.set(ControlMode.PercentOutput, 0);
+    }
+    //Hook
+      if(joystick1.getRawButton(1)) elevator.set(0.3);
+      else if(joystick1.getRawButton(2)) elevator.set(-0.3);
+      else elevator.set(0);
+    //Gun
+      //Transfer
+        SmartDashboard.putBoolean("canTransfer?", startBelt.get());
+        if(!startBelt.get()){
+          transfer.set(-1);
+          startDelay = System.currentTimeMillis();
+        }else if(!stopBelt.get()){
+          transfer.set(0);
+        }else{
+          intake.set(ControlMode.PercentOutput, -0.5);
+        }
+        if(System.currentTimeMillis()-startDelay>100 && !(transfer.get() == 0)) intake.set(ControlMode.PercentOutput, 0);
+        else intake.set(ControlMode.PercentOutput, -0.5);
+      //Outtake
+      if(joystick0.getRawButton(1)){
+        intake.set(ControlMode.PercentOutput, 0);
+        transfer.set(-1);
+        outtake.set(-(joystick0.getRawAxis(3)-1)/2);
+      }else if(joystick0.getRawButton(2)){
+        intake.set(ControlMode.PercentOutput, -0.5);
+        transfer.set(0);
+        outtake.set(0);
+      }
+      //Drawer +ve = in && -ve = out
+        if(joystick0.getRawButton(7)) pullIn = false;
+        if(joystick0.getRawButton(8)) pullIn = true;
+        if(pullIn && drawerIn.get()) drawer.set(0.7);
+        else if(!pullIn && drawerOut.get()) drawer.set(-0.7);
+        else drawer.set(0);
+
+    //Drive Train
+      //Encoders
+        SmartDashboard.putNumber("Left Encoder", encoder1.getDistance());
+        SmartDashboard.putNumber("Right Encoder", encoder2.getDistance());
+        if(joystick0.getRawButton(9)){
+          encoder1.reset();
+          encoder2.reset();
+        }
+
+        //Drive
+        joystickLValue = ( -joystick0.getRawAxis( 1 ) + ( joystick0.getRawAxis( 2 ) * limitTurnSpeed ) );
+        joystickRValue = ( -joystick0.getRawAxis( 1 ) - ( joystick0.getRawAxis( 2 ) * limitTurnSpeed ) );
+
+        if(joystickLValue-joystickRValue < 0.2 && joystickLValue-joystickRValue > -0.2) joystickLValue = joystickRValue;
+
+        myDrive.tankDrive(joystickLValue, joystickRValue);
+  }
+
+  @Override
+  public void testPeriodic() {
+  }
 }
