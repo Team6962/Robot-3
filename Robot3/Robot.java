@@ -196,6 +196,30 @@ public class Robot extends TimedRobot {
         joystickLValue = ( -joystick0.getRawAxis( 1 ) + ( joystick0.getRawAxis( 2 ) * limitTurnSpeed ) );
         joystickRValue = ( -joystick0.getRawAxis( 1 ) - ( joystick0.getRawAxis( 2 ) * limitTurnSpeed ) );
 
+        //Driver assists
+        if(joystick0.getPOV() == 0){
+          joystickLValue = 0.8;
+          joystickRValue = 0.8;
+          if(encoder1.getDistance()<encoder2.getDistance()) joystickLValue += 0.5;
+          if(encoder1.getDistance()>encoder2.getDistance()) joystickRValue += 0.5;
+        }else if(joystick0.getPOV() == 180){
+
+          joystickLValue = -0.8;
+          joystickRValue = -0.8;
+          if(encoder1.getDistance()<encoder2.getDistance()) joystickLValue -= 0.5;
+          if(encoder1.getDistance()>encoder2.getDistance()) joystickRValue -= 0.5;
+        }else if(joystick0.getPOV() < 180){
+          if(encoder1.getDistance()-encoder2.getDistance() < 1.555*joystick0.getPOV()){ 
+            joystickLValue = 0.5;
+            joystickRValue = -0.5;
+          }
+        }else if(joystick0.getPOV() > 180){
+          if(encoder2.getDistance()-encoder1.getDistance() < 1.555*(joystick0.getPOV()-180)){ 
+            joystickLValue = -0.5;
+            joystickRValue = 0.5;
+          }
+        }
+
         if(joystickLValue-joystickRValue < 0.2 && joystickLValue-joystickRValue > -0.2) joystickLValue = joystickRValue;
 
         myDrive.tankDrive(joystickLValue, joystickRValue);
