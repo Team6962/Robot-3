@@ -34,6 +34,7 @@ public class Robot extends TimedRobot {
     Joystick joystick1;
 
   //Motor controllers
+
     //Sparks
       Spark rbank;
       Spark lbank;
@@ -41,6 +42,7 @@ public class Robot extends TimedRobot {
       Spark transfer;
       Spark outtake;
       Spark winch;
+
     //Victors
       VictorSP drawer;
       VictorSPX intake;
@@ -56,26 +58,32 @@ public class Robot extends TimedRobot {
     long startDelay = 0;
     boolean pullIn;
     ArrayList povMode;
+
   //Color Sensor
     I2C.Port i2cPort = I2C.Port.kOnboard;
     ColorSensorV3 colorSensor = new ColorSensorV3(i2cPort);
     int colorCount;
     String lastColor;
+
   //Limit Switches
+    //Note that the unclicked state of the limit switch with .get() returns true,
+    //and the clicked state returns false.
     DigitalInput drawerIn;
     DigitalInput drawerOut;
     DigitalInput startBelt;
     DigitalInput stopBelt;
+
   //Endcoders
     Encoder encoder1;
     Encoder encoder2;
+
   //Testing values
-  int counter = 0;
+    int counter = 0;
 
   // Camera
-  UsbCamera camera;
-  double[] targetAngleValue = new double[1];
-  double[] ballAngleValue = new double[1]; 
+    UsbCamera camera;
+    double[] targetAngleValue = new double[1];
+    double[] ballAngleValue = new double[1]; 
 
   public static final int WINDOW_WIDTH = 1280;
   public static final int WINDOW_HEIGHT = 720;
@@ -153,27 +161,32 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousPeriodic() {
-    if(drawerOut.get()) drawer.set(-0.7);
-    else drawer.set(0);
+
+    if(drawerOut.get()) drawer.set(-0.7); //If the switch indicating that the drawer isn't all the way out isn't clicked, then make the drawer move out.
+    else drawer.set(0); //Else, stop moving.
+
   }
 
-  public String getColor(){
+  public String getColor() {
+
         String colorString;
         double range = 0.05;
-        Color detectedColor = colorSensor.getColor();
-         if ((detectedColor.red <= 0.1551+range && detectedColor.red >= 0.1551-range)&&(detectedColor.green <= 0.4444+range && detectedColor.green >= 0.4444-range)&&(detectedColor.blue <= 0.4001+range && detectedColor.blue >= 0.3901-range)) {
-            colorString = "Red";
-         } else if ((detectedColor.red <= 0.5173+range && detectedColor.red >= 0.4073-range)&&(detectedColor.green <= 0.3488+range && detectedColor.green >= 0.3488-range)&&(detectedColor.blue <= 0.134+range && detectedColor.blue >= 0.134-range)) {
-            colorString = "Blue";
-         } else if ((detectedColor.red <= 0.1899+range && detectedColor.red >= 0.1899-range)&&(detectedColor.green <= 0.5598+range && detectedColor.green >= 0.5598-range)&&(detectedColor.blue <= 0.2501+range && detectedColor.blue >= 0.2501-range)) {
-            colorString = "Yellow";
-         } else if ((detectedColor.red <= 0.3271+range && detectedColor.red >= 0.3271-range)&&(detectedColor.green <= 0.5385+range && detectedColor.green >= 0.5385-range)&&(detectedColor.blue <= 0.134+range && detectedColor.blue >= 0.134-range)) {
-            colorString = "Green";
-         } else {
-            colorString = "Unknown";
-         }
+        Color detectedColor = colorSensor.getColor(); //Asks the sensor for the colour, following section interprets the return.
+        if ((detectedColor.red <= 0.1551+range && detectedColor.red >= 0.1551-range)&&(detectedColor.green <= 0.4444+range && detectedColor.green >= 0.4444-range)&&(detectedColor.blue <= 0.4001+range && detectedColor.blue >= 0.3901-range)) {
+          colorString = "Red";
+        } else if ((detectedColor.red <= 0.5173+range && detectedColor.red >= 0.4073-range)&&(detectedColor.green <= 0.3488+range && detectedColor.green >= 0.3488-range)&&(detectedColor.blue <= 0.134+range && detectedColor.blue >= 0.134-range)) {
+          colorString = "Blue";
+        } else if ((detectedColor.red <= 0.1899+range && detectedColor.red >= 0.1899-range)&&(detectedColor.green <= 0.5598+range && detectedColor.green >= 0.5598-range)&&(detectedColor.blue <= 0.2501+range && detectedColor.blue >= 0.2501-range)) {
+          colorString = "Yellow";
+        } else if ((detectedColor.red <= 0.3271+range && detectedColor.red >= 0.3271-range)&&(detectedColor.green <= 0.5385+range && detectedColor.green >= 0.5385-range)&&(detectedColor.blue <= 0.134+range && detectedColor.blue >= 0.134-range)) {
+          colorString = "Green";
+        } else {
+          colorString = "Unknown";
+        }
+        //Returns the detected and interpreted colour.
         return colorString;
-     }
+
+  }
 
   public int mode(ArrayList<Integer> a){
     int center = 0;
