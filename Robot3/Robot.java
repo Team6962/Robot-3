@@ -4,6 +4,11 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 import com.revrobotics.ColorSensorV3;
 
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
+
+import java.util.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.Joystick;
@@ -12,8 +17,13 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.trajectory.constraint.CentripetalAccelerationConstraint;
 import edu.wpi.first.wpilibj.util.Color;
 import jdk.swing.interop.DropTargetContextWrapper;
+import edu.wpi.cscore.CvSink;
+import edu.wpi.cscore.CvSource;
+import edu.wpi.cscore.UsbCamera;
+import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 
@@ -44,6 +54,7 @@ public class Robot extends TimedRobot {
     static final double limitTurnSpeed = 0.75;
     long startDelay = 0;
     boolean pullIn;
+    ArrayList povMode;
   //Color Sensor
     I2C.Port i2cPort = I2C.Port.kOnboard;
     ColorSensorV3 colorSensor = new ColorSensorV3(i2cPort);
@@ -57,9 +68,26 @@ public class Robot extends TimedRobot {
   //Endcoders
     Encoder encoder1;
     Encoder encoder2;
+  //Testing values
+  int counter = 0;
+
+  // Camera
+  UsbCamera camera;
+  double[] targetAngleValue = new double[1];
+  double[] ballAngleValue = new double[1]; 
+
+  public static final int WINDOW_WIDTH = 1280;
+  public static final int WINDOW_HEIGHT = 720;
+
+  private Object imgLock = new Object();
+  Mat cameraMatrix;
+  Mat distCoeffs;
 
   @Override
   public void robotInit() {
+    System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    cameraMatrix = new Mat();
+    distCoeffs = new Mat();
     //Init Joysticks
     joystick0 = new Joystick(0);
     joystick1 = new Joystick(1);
@@ -85,6 +113,31 @@ public class Robot extends TimedRobot {
     //Encoders
     encoder1 = new Encoder(0, 1); //Left Encoder
     encoder2 = new Encoder(2, 3); //Right Encoder
+    //Driver Assist
+    povMode = new ArrayList<Double>();
+
+    new Thread(() -> {
+      FindTarget.setup();
+      FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs);
+
+      UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
+      camera.setResolution(WINDOW_WIDTH, WINDOW_HEIGHT);
+      CvSink cvSink = CameraServer.getInstance().getVideo();
+      //CvSource outputStream = CameraServer.getInstance().putVideo("Blur", 640, 480);
+
+      Mat source = new Mat();
+      //Mat output = new Mat();
+
+      while(!Thread.interrupted()) {
+        if (cvSink.grabFrame(source) == 0) {
+          continue;
+        }
+        synchronized(imgLock) {
+          ballAngleValue[0] = FindBall.getBallValue(source, WINDOW_WIDTH, WINDOW_HEIGHT, cameraMatrix, distCoeffs);
+        }
+        // SmartDashboard.putNumber("ballAngleValue", ballAngleValue[0]);
+      }
+    }).start();
   }
 
   @Override
@@ -120,8 +173,68 @@ public class Robot extends TimedRobot {
         return colorString;
      }
 
+  public int mode(ArrayList<Integer> a){
+    int center = 0;
+    int top = 0;
+    int topRight = 0;
+    int right = 0;
+    int bottomRight = 0;
+    int bottom = 0;
+    int bottomLeft = 0;
+    int left = 0;
+    int topLeft = 0;
+    for(int i = 0; i < a.size(); i++){
+      if((double)(a.get(i)) == -1){
+        center++;
+      }else if((double)(a.get(i)) == 0){
+        top++;
+      }else if((double)(a.get(i)) == 45){
+        topRight++;
+      }else if((double)(a.get(i)) == 90){
+        right++;
+      }else if((double)(a.get(i)) == 135){
+        bottomRight++;
+      }else if((double)(a.get(i)) == 180){
+        bottom++;
+      }else if((double)(a.get(i)) == 225){
+        bottomLeft++;
+      }else if((double)(a.get(i)) == 270){
+        left++;
+      }else if((double)(a.get(i)) == 315){
+        topLeft++;
+      }
+    }
+    int maxUse = Math.max(center,Math.max(top,Math.max(topRight,Math.max(right,Math.max(bottomRight,Math.max(bottom,Math.max(bottomLeft,Math.max(left,topLeft))))))));
+    
+    if(maxUse == center){
+      return -1;
+    }else if(maxUse == top){
+      return 0;
+    }else if(maxUse == topRight){
+      return 45;
+    }else if(maxUse == right){
+      return 90;
+    }else if(maxUse == bottomRight){
+      return 135;
+    }else if(maxUse == bottom){
+      return 180;
+    }else if(maxUse == bottomLeft){
+      return 235;
+    }else if(maxUse == left){
+      return 270;
+    }else if(maxUse == topLeft){
+      return 315;
+    }
+    return -1;
+  }
+
   @Override
   public void teleopPeriodic() {
+
+    synchronized(imgLock) {
+      SmartDashboard.putNumber("ballAngleValue", ballAngleValue[0]);
+    }
+
     //Color Sensor
       Color detectedColor = colorSensor.getColor();
       String colorString = getColor();
@@ -140,6 +253,13 @@ public class Robot extends TimedRobot {
       SmartDashboard.putNumber("colorCount", colorCount);
       SmartDashboard.putString("End Color", DriverStation.getInstance().getGameSpecificMessage());
     
+    //Swap forward and back button
+    if(joystick0.getRawButton(10)){
+      double temp = -joystickLValue;
+      joystickLValue = -joystickRValue;
+      joystickRValue = temp;
+    }
+
     //Control Panel Manipulator
     if(joystick1.getRawButton(11)) colorCount = 0;
     if(colorCount <= 32 && joystick1.getRawButton(7)){
@@ -162,20 +282,24 @@ public class Robot extends TimedRobot {
         }else if(!stopBelt.get()){
           transfer.set(0);
         }else{
+          intake.set(ControlMode.PercentOutput, -0.75);
+        }
+
+        if(!(transfer.get() == 0)){
           intake.set(ControlMode.PercentOutput, -0.5);
         }
-        if(System.currentTimeMillis()-startDelay>100 && !(transfer.get() == 0)) intake.set(ControlMode.PercentOutput, 0);
-        else intake.set(ControlMode.PercentOutput, -0.5);
+        else intake.set(ControlMode.PercentOutput, -0.75);
       //Outtake
       if(joystick0.getRawButton(1)){
         intake.set(ControlMode.PercentOutput, 0);
         transfer.set(-1);
-        outtake.set(-(joystick0.getRawAxis(3)-1)/2);
+        counter = 0;
       }else if(joystick0.getRawButton(2)){
-        intake.set(ControlMode.PercentOutput, -0.5);
+        intake.set(ControlMode.PercentOutput, -0.75);
         transfer.set(0);
         outtake.set(0);
       }
+      outtake.set(-(joystick0.getRawAxis(3)-1)/2);
       //Drawer +ve = in && -ve = out
         if(joystick0.getRawButton(7)) pullIn = false;
         if(joystick0.getRawButton(8)) pullIn = true;
@@ -197,29 +321,64 @@ public class Robot extends TimedRobot {
         joystickRValue = ( -joystick0.getRawAxis( 1 ) - ( joystick0.getRawAxis( 2 ) * limitTurnSpeed ) );
 
         //Driver assists
-        if(joystick0.getPOV() == 0){
-          joystickLValue = 0.8;
-          joystickRValue = 0.8;
-          if(encoder1.getDistance()<encoder2.getDistance()) joystickLValue += 0.5;
-          if(encoder1.getDistance()>encoder2.getDistance()) joystickRValue += 0.5;
-        }else if(joystick0.getPOV() == 180){
-
-          joystickLValue = -0.8;
-          joystickRValue = -0.8;
-          if(encoder1.getDistance()<encoder2.getDistance()) joystickLValue -= 0.5;
-          if(encoder1.getDistance()>encoder2.getDistance()) joystickRValue -= 0.5;
-        }else if(joystick0.getPOV() < 180){
-          if(encoder1.getDistance()-encoder2.getDistance() < 1.555*joystick0.getPOV()){ 
+        povMode.add(joystick0.getPOV());
+        SmartDashboard.putNumber("POV", mode(povMode));
+        if(povMode.size()>10){
+          povMode.remove(0);
+          if(mode(povMode) == 0){
             joystickLValue = 0.5;
-            joystickRValue = -0.5;
-          }
-        }else if(joystick0.getPOV() > 180){
-          if(encoder2.getDistance()-encoder1.getDistance() < 1.555*(joystick0.getPOV()-180)){ 
-            joystickLValue = -0.5;
             joystickRValue = 0.5;
+            if(encoder1.getDistance()<encoder2.getDistance()){
+              joystickLValue += 0.05;
+            }
+            if(encoder1.getDistance()>encoder2.getDistance()){
+              joystickRValue += 0.05;
+            }
+          }else if(mode(povMode) == 180){
+            joystickLValue = -0.5;
+            joystickRValue = -0.5;
+            if(encoder1.getDistance()<encoder2.getDistance()){
+              joystickLValue -= 0.05;
+            }
+            if(encoder1.getDistance()>encoder2.getDistance()){
+              joystickRValue -= 0.05;
+            }
+          }else if(mode(povMode) == 90){
+            if(encoder1.getDistance()-encoder2.getDistance() < 140){
+              joystickLValue = 0.5;
+              joystickRValue = -0.5;
+            }
           }
-        }
-
+          
+        /*}else if(mode(povMode) == 90){
+            if(encoder1.getDistance()-encoder2.getDistance() < 280){
+              joystickLValue = 0.5;
+              joystickRValue = -0.5;
+            }
+            
+          }else if(mode(povMode) == 135){
+            if(encoder1.getDistance()-encoder2.getDistance() < 420){
+              joystickLValue = 0.5;
+              joystickRValue = -0.5;
+            }
+          }*/
+          else if(mode(povMode) == 270){
+            if(encoder2.getDistance()-encoder1.getDistance() < 140){
+              joystickLValue = -0.5;
+              joystickRValue = 0.5;
+            }
+          }/*else if(mode(povMode) == 270){
+            if(encoder2.getDistance()-encoder1.getDistance() < 280){
+              joystickLValue = -0.5;
+              joystickRValue = 0.5;
+            }
+          }else if(mode(povMode) == 225){
+            if(encoder2.getDistance()-encoder1.getDistance() < 420){
+              joystickLValue = -0.5;
+              joystickRValue = 0.5;
+            }*/
+          }
+        
         if(joystickLValue-joystickRValue < 0.2 && joystickLValue-joystickRValue > -0.2) joystickLValue = joystickRValue;
 
         myDrive.tankDrive(joystickLValue, joystickRValue);
