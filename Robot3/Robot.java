@@ -98,36 +98,44 @@ public class Robot extends TimedRobot {
     System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
     cameraMatrix = new Mat();
     distCoeffs = new Mat();
+    
     //Init Joysticks
-    joystick0 = new Joystick( 0 );
-    joystick1 = new Joystick( 1 );
+      joystick0 = new Joystick( 0 );
+      joystick1 = new Joystick( 1 );
+    
     //Init Drivetrain
-    rbank = new Spark( 0 );
-    lbank = new Spark( 1 );
-    myDrive = new DifferentialDrive( lbank, rbank );
+      rbank = new Spark( 0 );
+      lbank = new Spark( 1 );
+      myDrive = new DifferentialDrive( lbank, rbank );
+    
     //Other Motors
-    transfer = new Spark( 2 );
-    elevator = new Spark( 3 );
-    outtake = new Spark( 4 );
-    winch = new Spark( 5 );
-    drawer = new VictorSP( 9 );
-    intake = new VictorSPX( 10 );
-    ctrlpnl = new VictorSPX( 20 );
+      transfer = new Spark( 2 );
+      elevator = new Spark( 3 );
+      outtake = new Spark( 4 );
+      winch = new Spark( 5 );
+      drawer = new VictorSP( 9 );
+      intake = new VictorSPX( 10 );
+      ctrlpnl = new VictorSPX( 20 );
+    
     //Color Sensor
-    lastColor = getColor();
+      lastColor = getColor();
+    
     //Limit Switches
-    drawerIn = new DigitalInput( 9 );
-    drawerOut = new DigitalInput( 8 );
-    startBelt = new DigitalInput( 7 );
-    stopBelt = new DigitalInput( 6 );
-    pullIn = false;
-    //Encoders
-    encoder1 = new Encoder( 0, 1 ); //Left Encoder
-    encoder2 = new Encoder( 2, 3 ); //Right Encoder
-    //Driver Assist
-    povMode = new ArrayList<Double>();
+      drawerIn = new DigitalInput( 9 );
+      drawerOut = new DigitalInput( 8 );
+      startBelt = new DigitalInput( 7 );
+      stopBelt = new DigitalInput( 6 );
+      pullIn = false;
 
-    new Thread(() -> {
+    //Encoders
+      encoder1 = new Encoder( 0, 1 ); //Left Encoder
+      encoder2 = new Encoder( 2, 3 ); //Right Encoder
+    
+    //Driver Assist
+      povMode = new ArrayList<Double>();
+
+    new Thread( () -> {
+    
       FindTarget.setup();
       FindBall.readCalibrationData( "calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs );
 
@@ -140,15 +148,17 @@ public class Robot extends TimedRobot {
       //Mat output = new Mat();
 
       while( !Thread.interrupted() ) {
-        if ( cvSink.grabFrame( source ) == 0 ) {
-          continue;
-        }
+    
+        if ( cvSink.grabFrame( source ) == 0 ) continue;
         synchronized( imgLock ) {
+
           ballAngleValue[ 0 ] = FindBall.getBallValue( source, WINDOW_WIDTH, WINDOW_HEIGHT, cameraMatrix, distCoeffs );
+        
         }
         // SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
       }
-    }).start();
+      
+    } ).start();
   
   }
 
@@ -175,15 +185,25 @@ public class Robot extends TimedRobot {
         double range = 0.05;
         Color detectedColor = colorSensor.getColor(); //Asks the sensor for the colour, following section interprets the return.
         if( ( detectedColor.red <= 0.1551 + range && detectedColor.red >= 0.1551 - range ) && ( detectedColor.green <= 0.4444 + range && detectedColor.green >= 0.4444 - range ) && ( detectedColor.blue <= 0.4001 + range && detectedColor.blue >= 0.3901 - range ) ) {
+       
           colorString = "Red";
+       
         } else if( ( detectedColor.red <= 0.5173 + range && detectedColor.red >= 0.4073 - range ) && ( detectedColor.green <= 0.3488 + range && detectedColor.green >= 0.3488 - range ) && ( detectedColor.blue <= 0.134 + range && detectedColor.blue >= 0.134 - range ) ) {
+       
           colorString = "Blue";
+       
         } else if( ( detectedColor.red <= 0.1899 + range && detectedColor.red >= 0.1899 - range ) && ( detectedColor.green <= 0.5598 + range && detectedColor.green >= 0.5598 - range ) && ( detectedColor.blue <= 0.2501 + range && detectedColor.blue >= 0.2501 - range ) ) {
+       
           colorString = "Yellow";
+       
         } else if( ( detectedColor.red <= 0.3271 + range && detectedColor.red >= 0.3271 - range ) && ( detectedColor.green <= 0.5385 + range && detectedColor.green >= 0.5385 - range ) && ( detectedColor.blue <= 0.134 + range && detectedColor.blue >= 0.134 - range ) ) {
+       
           colorString = "Green";
+       
         } else {
+       
           colorString = "Unknown";
+       
         }
         //Returns the detected and interpreted colour.
         return colorString;
@@ -244,9 +264,10 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
 
-    synchronized( imgLock ) {
-      SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
-    }
+    //Camera
+      synchronized( imgLock ) {
+        SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
+      }
 
     //Color Sensor
       Color detectedColor = colorSensor.getColor();
@@ -260,7 +281,7 @@ public class Robot extends TimedRobot {
 
       }
       
-      //Essentially put the specified values on the smart dashboard.
+    //Essentially put the specified values on the smart dashboard.
       SmartDashboard.putNumber( "Red", detectedColor.red );
       SmartDashboard.putNumber( "Green", detectedColor.green );
       SmartDashboard.putNumber( "Blue", detectedColor.blue );
@@ -269,23 +290,26 @@ public class Robot extends TimedRobot {
       SmartDashboard.putString( "End Color", DriverStation.getInstance().getGameSpecificMessage() );
     
     //Swap forward and back button
-    if( joystick0.getRawButton( 10 ) ) {
+      if( joystick0.getRawButton( 10 ) ) {
 
-      double temp = -joystickLValue;
-      joystickLValue = -joystickRValue;
-      joystickRValue = temp;
+        double temp = -joystickLValue;
+        joystickLValue = -joystickRValue;
+        joystickRValue = temp;
 
-    }
+      }
 
     //Control Panel Manipulator
-    if( joystick1.getRawButton( 11 ) ) colorCount = 0;
-    if( colorCount <= 32 && joystick1.getRawButton( 7 ) ) {
-       ctrlpnl.set( ControlMode.PercentOutput, 0.3 );
-    } else if( joystick1.getRawButton( 8 ) && !colorString.equals( ds.getGameSpecificMessage() ) ) {
-       ctrlpnl.set( ControlMode.PercentOutput, 0.3 );
-    } else {
-       ctrlpnl.set( ControlMode.PercentOutput, 0 );
-    }
+      if( joystick1.getRawButton( 11 ) ) colorCount = 0;
+      if( colorCount <= 32 && joystick1.getRawButton( 7 ) ) {
+
+        ctrlpnl.set( ControlMode.PercentOutput, 0.3 );
+
+      } else if( joystick1.getRawButton( 8 ) && !colorString.equals( ds.getGameSpecificMessage() ) ) {
+
+        ctrlpnl.set( ControlMode.PercentOutput, 0.3 );
+
+      } else ctrlpnl.set( ControlMode.PercentOutput, 0 );
+    
     //Hook
       if( joystick1.getRawButton( 1 ) ) elevator.set( 0.3 );
       else if( joystick1.getRawButton( 2 ) ) elevator.set( -0.3 );
@@ -296,28 +320,32 @@ public class Robot extends TimedRobot {
       //Transfer
         SmartDashboard.putBoolean( "canTransfer?", startBelt.get() );
         if( !startBelt.get() ) {
+        
           transfer.set( -1 );
           startDelay = System.currentTimeMillis();
-        } else if( !stopBelt.get() ) {
-          transfer.set( 0 );
-        } else {
-          intake.set( ControlMode.PercentOutput, -0.75 );
-        }
+        
+        } else if( !stopBelt.get() ) transfer.set( 0 );
+        else intake.set( ControlMode.PercentOutput, -0.75 );
 
         if( !( transfer.get() == 0 ) ) intake.set( ControlMode.PercentOutput, -0.5 );
         else intake.set( ControlMode.PercentOutput, -0.75 );
 
       //Outtake
         if( joystick0.getRawButton( 1 ) ) {
+        
           intake.set( ControlMode.PercentOutput, 0 );
           transfer.set( -1 );
           counter = 0;
+        
         } else if( joystick0.getRawButton( 2 ) ) {
+        
           intake.set( ControlMode.PercentOutput, -0.75 );
           transfer.set( 0 );
           outtake.set( 0 );
+        
         }
         outtake.set( -( joystick0.getRawAxis( 3 ) - 1 ) / 2 );
+
       //Drawer +ve = in && -ve = out
         if( joystick0.getRawButton( 7 ) ) pullIn = false;
         if( joystick0.getRawButton( 8 ) ) pullIn = true;
@@ -330,8 +358,10 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber( "Left Encoder", encoder1.getDistance() );
         SmartDashboard.putNumber( "Right Encoder", encoder2.getDistance() );
         if( joystick0.getRawButton( 9 ) ) {
+        
           encoder1.reset();
           encoder2.reset();
+
         }
 
       //Drive
@@ -342,35 +372,37 @@ public class Robot extends TimedRobot {
         povMode.add( joystick0.getPOV() );
         SmartDashboard.putNumber( "POV", mode( povMode ) );
         if( povMode.size() > 10 ) {
+
           povMode.remove( 0 );
           if( mode( povMode ) == 0 ) {
+
             joystickLValue = 0.5;
             joystickRValue = 0.5;
-            if( encoder1.getDistance() < encoder2.getDistance() ) {
-              joystickLValue += 0.05;
-            }
-            if( encoder1.getDistance() > encoder2.getDistance() ) {
-              joystickRValue += 0.05;
-            }
+            if( encoder1.getDistance() < encoder2.getDistance() ) joystickLValue += 0.05;
+            if( encoder1.getDistance() > encoder2.getDistance() ) joystickRValue += 0.05;
+
           } else if( mode( povMode ) == 180 ) {
+
             joystickLValue = -0.5;
             joystickRValue = -0.5;
-            if( encoder1.getDistance() < encoder2.getDistance() ) {
-              joystickLValue -= 0.05;
-            }
-            if( encoder1.getDistance() > encoder2.getDistance() ) {
-              joystickRValue -= 0.05;
-            }
+            if( encoder1.getDistance() < encoder2.getDistance() ) joystickLValue -= 0.05;
+            if( encoder1.getDistance() > encoder2.getDistance() ) joystickRValue -= 0.05;
+
           } else if( mode( povMode ) == 90 ) {
+
             if( encoder1.getDistance() - encoder2.getDistance() < 140 ) {
+              
               joystickLValue = 0.5;
               joystickRValue = -0.5;
+
             }
+
           }
+
         }
         if( joystickLValue - joystickRValue < 0.2 && joystickLValue - joystickRValue > -0.2 ) joystickLValue = joystickRValue;
-
         myDrive.tankDrive( joystickLValue, joystickRValue );
+
   }
 
   @Override
