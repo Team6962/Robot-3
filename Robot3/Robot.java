@@ -188,59 +188,55 @@ public class Robot extends TimedRobot {
 
   }
 
-  public int mode(ArrayList<Integer> a){
-    int center = 0;
-    int top = 0;
-    int topRight = 0;
-    int right = 0;
-    int bottomRight = 0;
-    int bottom = 0;
-    int bottomLeft = 0;
-    int left = 0;
-    int topLeft = 0;
-    for(int i = 0; i < a.size(); i++){
-      if((double)(a.get(i)) == -1){
-        center++;
-      }else if((double)(a.get(i)) == 0){
-        top++;
-      }else if((double)(a.get(i)) == 45){
-        topRight++;
-      }else if((double)(a.get(i)) == 90){
-        right++;
-      }else if((double)(a.get(i)) == 135){
-        bottomRight++;
-      }else if((double)(a.get(i)) == 180){
-        bottom++;
-      }else if((double)(a.get(i)) == 225){
-        bottomLeft++;
-      }else if((double)(a.get(i)) == 270){
-        left++;
-      }else if((double)(a.get(i)) == 315){
-        topLeft++;
+  public static int mode( ArrayList<Integer> il ) {
+
+      //Returns the mode of a data set, returns -1 if there is more than one mode.
+      ArrayList<Integer> occurences = new ArrayList<>();
+
+      for( int i = 0; i < il.size(); i++ ) {
+
+          //Goes through each item in the list and compares it to each item in the list.
+          int c = 0;
+          for( int j = 0; j < il.size(); j++ ) {
+            
+              //Compare each il[ i ] to il[ j ],
+              //look for equality and count for each ==.
+              if( il.get( i ) == il.get( j ) ) c++;
+
+          }
+          //Assign the count to a new cell in occurences.
+          occurences.add( c );
+
       }
-    }
-    int maxUse = Math.max(center,Math.max(top,Math.max(topRight,Math.max(right,Math.max(bottomRight,Math.max(bottom,Math.max(bottomLeft,Math.max(left,topLeft))))))));
-    
-    if(maxUse == center){
+      //For each int in occurences, which corresponds to the ints in il,
+      int d = 0;
+      //If it's the largest number in occurences, then add 1 to d.
+      for( int k : occurences ) if( k == largestIn( occurences ) ) d++;
+      //If the number of highest number in occurences exceeds
+      //the highest number in occurences, return -1,
+      //as that indicates more than 1 mode.
+      if( largestIn( occurences ) < d ) return -1;
+      //Effectively else, return the mode.
+      return il.get( indexOf( largestIn( occurences ), occurences ) );
+
+  }
+
+  public static int largestIn( ArrayList<Integer> il ) {
+
+      //Returns the largest int in ArrayList<Integer> il.
+      assert il.size() > 0: "List has a length less than 1.";
+      int i = il.get( 0 );
+      for( int j : il ) if( j > i ) i = j;
+      return i;
+
+  }
+
+  public static int indexOf( int j, ArrayList<Integer> il ) {
+
+      //Returns the index of j in il, -1 if j is not in il.
+      for( int i = 0; i < il.size(); i++ ) if( il.get( i ) == j ) return i;
       return -1;
-    }else if(maxUse == top){
-      return 0;
-    }else if(maxUse == topRight){
-      return 45;
-    }else if(maxUse == right){
-      return 90;
-    }else if(maxUse == bottomRight){
-      return 135;
-    }else if(maxUse == bottom){
-      return 180;
-    }else if(maxUse == bottomLeft){
-      return 235;
-    }else if(maxUse == left){
-      return 270;
-    }else if(maxUse == topLeft){
-      return 315;
-    }
-    return -1;
+
   }
 
   @Override
