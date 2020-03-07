@@ -40,6 +40,7 @@ public class Robot extends TimedRobot {
       Spark elevator;
       Spark transfer;
       Spark outtake;
+      Spark winch;
     //Victors
       VictorSP drawer;
       VictorSPX intake;
@@ -99,6 +100,7 @@ public class Robot extends TimedRobot {
     transfer = new Spark(2);
     elevator = new Spark(3);
     outtake = new Spark(4);
+    winch = new Spark(5);
     drawer = new VictorSP(9);
     intake = new VictorSPX(10);
     ctrlpnl = new VictorSPX(20);
@@ -273,6 +275,8 @@ public class Robot extends TimedRobot {
       if(joystick1.getRawButton(1)) elevator.set(0.3);
       else if(joystick1.getRawButton(2)) elevator.set(-0.3);
       else elevator.set(0);
+      winch.set(joystick1.getRawAxis(1));
+
     //Gun
       //Transfer
         SmartDashboard.putBoolean("canTransfer?", startBelt.get());
@@ -349,36 +353,7 @@ public class Robot extends TimedRobot {
               joystickRValue = -0.5;
             }
           }
-          
-        /*}else if(mode(povMode) == 90){
-            if(encoder1.getDistance()-encoder2.getDistance() < 280){
-              joystickLValue = 0.5;
-              joystickRValue = -0.5;
-            }
-            
-          }else if(mode(povMode) == 135){
-            if(encoder1.getDistance()-encoder2.getDistance() < 420){
-              joystickLValue = 0.5;
-              joystickRValue = -0.5;
-            }
-          }*/
-          else if(mode(povMode) == 270){
-            if(encoder2.getDistance()-encoder1.getDistance() < 140){
-              joystickLValue = -0.5;
-              joystickRValue = 0.5;
-            }
-          }/*else if(mode(povMode) == 270){
-            if(encoder2.getDistance()-encoder1.getDistance() < 280){
-              joystickLValue = -0.5;
-              joystickRValue = 0.5;
-            }
-          }else if(mode(povMode) == 225){
-            if(encoder2.getDistance()-encoder1.getDistance() < 420){
-              joystickLValue = -0.5;
-              joystickRValue = 0.5;
-            }*/
-          }
-        
+        }
         if(joystickLValue-joystickRValue < 0.2 && joystickLValue-joystickRValue > -0.2) joystickLValue = joystickRValue;
 
         myDrive.tankDrive(joystickLValue, joystickRValue);
