@@ -58,6 +58,7 @@ public class Robot extends TimedRobot {
     long startDelay = 0;
     boolean pullIn;
     ArrayList povMode;
+    long start;
 
   //Color Sensor
     I2C.Port i2cPort = I2C.Port.kOnboard;
@@ -83,12 +84,14 @@ public class Robot extends TimedRobot {
   // Camera
     UsbCamera camera;
     double[] targetAngleValue = new double[ 1 ];
+    boolean[] setTargetAngleValue = new boolean[ 1 ];
     double[] ballAngleValue = new double[ 1 ]; 
+    boolean[] setBallAngleValue = new boolean[ 1 ];
 
   public static final int WINDOW_WIDTH = 1280;
   public static final int WINDOW_HEIGHT = 720;
 
-  private Object imgLock = new Object();
+  // private Object imgLock = new Object();
   Mat cameraMatrix;
   Mat distCoeffs;
 
@@ -150,12 +153,10 @@ public class Robot extends TimedRobot {
       while( !Thread.interrupted() ) {
     
         if ( cvSink.grabFrame( source ) == 0 ) continue;
-        synchronized( imgLock ) {
-
-          ballAngleValue[ 0 ] = FindBall.getBallValue( source, WINDOW_WIDTH, WINDOW_HEIGHT, cameraMatrix, distCoeffs );
-        
-        }
+        ballAngleValue[ 0 ] = FindBall.getBallValue( source, WINDOW_WIDTH, WINDOW_HEIGHT, cameraMatrix, distCoeffs );
+        setBallAngleValue [ 0 ] = true;
         // SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
+
       }
       
     } ).start();
@@ -168,11 +169,27 @@ public class Robot extends TimedRobot {
 
   @Override
   public void autonomousInit() {
+
+    start = System.currentTimeMillis();
    
   }
 
   @Override
   public void autonomousPeriodic() {
+
+    long now = System.currentTimeMillis();
+    if( ( encoder1.getDistance() >= -200 || encoder1.getDistance() >= -200 ) && now - start < 8000 ) {
+
+      myDrive.tankDrive( -0.7, -0.7 );
+    
+    } else if( now - start < 8000 ) {
+
+      outtake.set( 0.65 );
+      transfer.set( -0.7 );
+      myDrive.tankDrive( 0, 0 );
+
+    } else if( now - start < 9500 ) myDrive.tankDrive( 0.7, 0.7 );
+    else myDrive.tankDrive( 0, 0 );
 
     if( drawerOut.get() ) drawer.set( -0.7 ); //If the switch indicating that the drawer isn't all the way out isn't clicked, then make the drawer move out.
     else drawer.set( 0 ); //Else, stop moving.
@@ -200,11 +217,8 @@ public class Robot extends TimedRobot {
        
           colorString = "Green";
        
-        } else {
-       
-          colorString = "Unknown";
-       
-        }
+        } else colorString = "Unknown";
+
         //Returns the detected and interpreted colour.
         return colorString;
 
@@ -265,9 +279,9 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
 
     //Camera
-      synchronized( imgLock ) {
-        SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
-      }
+      //Puts ball angle value onto the SmartDashboard.
+      SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
+      SmartDashboard.putBoolean( "setBallAngleValue", setBallAngleValue[ 0 ] );
 
     //Color Sensor
       Color detectedColor = colorSensor.getColor();
