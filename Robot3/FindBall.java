@@ -125,7 +125,7 @@ public class FindBall {
 	}
 
 	public static double getBallValue(Mat mat, int width, int height, Mat cameraMatrix, Mat distCoeffs) {
-		Point3 ball = getBallValue(mat, width, height, cameraMatrix, distCoeffs);
+		Point3 ball = findball(mat, width, height, cameraMatrix, distCoeffs);
 		ball.x -= FindBall.X_OFFSET;
 		ball.y -= FindBall.Y_OFFSET;
 		ball.z -= FindBall.Z_OFFSET;
