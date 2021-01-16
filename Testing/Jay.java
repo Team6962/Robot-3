@@ -178,17 +178,23 @@ public class Robot extends TimedRobot {
   public void autonomousPeriodic() {
 
     long now = System.currentTimeMillis();
-    if (now - start < 3000){
-      myDrive.tankDrive(0.8, 0.8);
+    if (now - start < 1500){
+      myDrive.tankDrive(0.7, 0.7);
+    }
+    else if (now - start < 3000){
+      myDrive.tankDrive(0,0);
+    }
+    else if (now - start < 4000){
+      myDrive.tankDrive(0.8,0.4);
     }
     else if (now - start < 4500){
-      myDrive.tankDrive(0.2,1);
+       myDrive.tankDrive(0,0);
+    }
+    else if (now - start < 5500){
+      myDrive.tankDrive(0.4, 0.8);
     }
     else if (now - start < 6000){
-      myDrive.tankDrive(1, 0.2);
-    }
-    else if (now - start < 8000){
-      myDrive.tankDrive(1, 1);
+      myDrive.tankDrive(-0.7, -0.7);
     }
     else {
       myDrive.tankDrive(0, 0);
