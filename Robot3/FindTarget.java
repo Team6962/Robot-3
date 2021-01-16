@@ -12,8 +12,6 @@ public class FindTarget {
 	public static void setup() {
 		// https://docs.wpilib.org/en/latest/docs/software/networktables/listening-for-change.html
 		FindTarget.table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
-		FindTarget.setTargetValue = false;
-		FindTarget.targetValue = 0d;
 
 		FindTarget.table.startClientTeam(TEAM_NUMBER);
 		FindTarget.table.addEntryListener("AngleFrontPort", (table, key, entry, value, flags) -> {
