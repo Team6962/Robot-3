@@ -9,13 +9,13 @@
     else if(now - start < 1500){
       myDrive.TankDrive(0.5,-0.5);
     }
-    else if(now - start < 1600){
+    else if(now - start < 2000){
       myDrive.TankDrive(0.5,0.5);
     }
-    else if(now -start < 1700){
+    else if(now -start < 2500){
       myDrive.tankDrive(-0.5,0.5);
     }
-    else if(now - start < 1800){
+    else if(now - start < 3000){
       myDrive.TankDrive(0.5,0.5);
     }
     else{
