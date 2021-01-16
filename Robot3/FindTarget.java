@@ -13,17 +13,16 @@ public class FindTarget {
 		// https://docs.wpilib.org/en/latest/docs/software/networktables/listening-for-change.html
 		FindTarget.table = NetworkTableInstance.getDefault().getTable("SmartDashboard");
 
-		FindTarget.table.startClientTeam(TEAM_NUMBER);
 		FindTarget.table.addEntryListener("AngleFrontPort", (table, key, entry, value, flags) -> {
-			FindTarget.angleFrontPortValue = value.getValue();
+			FindTarget.angleFrontPortValue = Double.parseDouble(value.getValue());
 		}, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 		FindTarget.table.addEntryListener("AngleBackPort", (table, key, entry, value, flags) -> {
-			FindTarget.angleBackPortValue = value.getValue();
+			FindTarget.angleBackPortValue = Double.parseDouble(value.getValue());
 		}, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 
 		FindTarget.table.addEntryListener("TrackingSuccess", (table, key, entry, value, flags) -> {
-			FindTarget.angleBackPortValue = value.getValue();
+			FindTarget.trackingSuccess = value.getValue().equals("true");
 		}, EntryListenerFlags.kNew | EntryListenerFlags.kUpdate);
 	}
 
