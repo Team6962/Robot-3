@@ -1,8 +1,4 @@
-int begintime;
-int stoptime;
-int now;
-double speed;
-public static void rotateRight(now, begintime, stoptime, speed) {
+public static void rotateRight(int now, int begintime, int stoptime, double speed) {
   if (now > begintime) {
     if (now < stoptime) {
       if (-encoder1.getDistance() == encoder2.getDistance()) {
