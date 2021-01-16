@@ -1,4 +1,4 @@
-@Override
+  @Override
   public void autonomousPeriodic() {
 
     long now = System.currentTimeMillis();
@@ -10,6 +10,8 @@
       myDrive.tankDrive(0.6, 0.6);
     } else if (now - start < 8000) {
       myDrive.tankDrive(-0.8, -0.8);
+    } else {
+      myDrive.tankDrive(0, 0);
     }
 
   }
