@@ -125,34 +125,29 @@ public class FindBall {
 	}
 
 	public static double getBallValue(Mat mat, int width, int height, Mat cameraMatrix, Mat distCoeffs) {
-		Point3 ball = findball(mat, width, height, cameraMatrix, distCoeffs);
+		Point3 ball = findBall(mat, width, height, cameraMatrix, distCoeffs);
 		ball.x -= FindBall.X_OFFSET;
 		ball.y -= FindBall.Y_OFFSET;
 		ball.z -= FindBall.Z_OFFSET;
 		if(ball != null && ball.z != 0) {
-			return Math.atan2(ball.x / ball.z);
+			return Math.atan2(ball.z, ball.x);
 		}
 		return 0d;
 	}
 
-	/*public static void main(String[] args) {
+	public static void main(String[] args) {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		VideoCapture vc = new VideoCapture(0);
 		
 		double orig_width = vc.get(Videoio.CAP_PROP_FRAME_WIDTH);
 		double orig_height = vc.get(Videoio.CAP_PROP_FRAME_HEIGHT);
-
 		int width = 840;
 		int height = (int)(orig_height * width / orig_width);
-
 		vc.set(Videoio.CAP_PROP_FRAME_WIDTH, width);
 		vc.set(Videoio.CAP_PROP_FRAME_HEIGHT, height);
-
 		Mat cameraMatrix = new Mat();
 		Mat distCoeffs = new Mat();
-
 		readCalibrationData("res/new-life-size-vidoe-calib.txt", cameraMatrix, distCoeffs);
-
 		Mat mat = new Mat();
 		if(vc.isOpened()) {
 			while(true) {
@@ -164,5 +159,5 @@ public class FindBall {
 				}
 			}
 		}
-	}*/
+	}
 }
