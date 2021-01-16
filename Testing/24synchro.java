@@ -1,3 +1,7 @@
+int begintime;
+int stoptime;
+int now;
+double speed;
 public static void rotateRight(now, begintime, stoptime, speed) {
   if (now > begintime) {
     if (now < stoptime) {
