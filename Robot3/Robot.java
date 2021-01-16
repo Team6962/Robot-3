@@ -81,7 +81,6 @@ public class Robot extends TimedRobot {
   //Testing values
     int counter = 0;
   
-  /*
   // Camera
     UsbCamera camera;
     double[] targetAngleValue = new double[ 1 ];
@@ -95,14 +94,13 @@ public class Robot extends TimedRobot {
   // private Object imgLock = new Object();
   Mat cameraMatrix;
   Mat distCoeffs;
-  */
   
   @Override
   public void robotInit() {
 
-    /*System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
+    System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
     cameraMatrix = new Mat();
-    distCoeffs = new Mat();*/
+    distCoeffs = new Mat();
     
     //Init Joysticks
       joystick0 = new Joystick( 0 );
@@ -139,7 +137,7 @@ public class Robot extends TimedRobot {
     //Driver Assist
       povMode = new ArrayList<Double>();
 
-    /*new Thread( () -> {
+	  new Thread( () -> {
     
       FindTarget.setup();
       FindBall.readCalibrationData( "calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs );
@@ -157,11 +155,11 @@ public class Robot extends TimedRobot {
         if ( cvSink.grabFrame( source ) == 0 ) continue;
         ballAngleValue[ 0 ] = FindBall.getBallValue( source, WINDOW_WIDTH, WINDOW_HEIGHT, cameraMatrix, distCoeffs );
         setBallAngleValue [ 0 ] = true;
-        // SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
+        SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
 
       }
       
-    } ).start();*/
+    } ).start();
   
   }
 
