@@ -1,29 +1,6 @@
-
-/*
-0.25 sec pauses inbetween actions
-0.7 default motor value for each action
-
-2 sec move forward
-0.25 wait
-2 sec move backward
-0.25 wait
-1.25 sec turn to next branch
-0.25 wait
-x4
-
-
-What speed does 
-
-
-
-
-
-*/
-
-// Dance:
-
-
+// Make sure that "prevTime" and "now" are declared with the right values.
 int prevTime = 0; // Prev goup end time in milliseconds
+
 for (int i = 0; i < 4; i++) {
   int offset = (i * 6000) + prevTime;                                          // For looping time variable
   
