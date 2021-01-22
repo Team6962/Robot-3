@@ -136,31 +136,14 @@ public class Robot extends TimedRobot {
     
     //Driver Assist
       povMode = new ArrayList<Double>();
-
-	  new Thread( () -> {
-    
+      
+    //Vision Processing
       FindTarget.setup();
-      FindBall.readCalibrationData( "calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs );
-
+      FindBall.readCalibrationData("calib-logitech.mov-720-30-calib.txt", cameraMatrix, distCoeffs);
       UsbCamera camera = CameraServer.getInstance().startAutomaticCapture();
       camera.setResolution( WINDOW_WIDTH, WINDOW_HEIGHT );
       CvSink cvSink = CameraServer.getInstance().getVideo();
-      //CvSource outputStream = CameraServer.getInstance().putVideo( "Blur", 640, 480 );
-
       Mat source = new Mat();
-      //Mat output = new Mat();
-
-      while( !Thread.interrupted() ) {
-    
-        if ( cvSink.grabFrame( source ) == 0 ) continue;
-        ballAngleValue[ 0 ] = FindBall.getBallValue( source, WINDOW_WIDTH, WINDOW_HEIGHT, cameraMatrix, distCoeffs );
-        setBallAngleValue [ 0 ] = true;
-        SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
-
-      }
-      
-    } ).start();
-  
   }
 
   @Override
@@ -277,6 +260,11 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+      if (cvSink.grabFrame(source) != 0) {
+      	  ballAngleValue[ 0 ] = FindBall.getBallValue( source, WINDOW_WIDTH, WINDOW_HEIGHT, cameraMatrix, distCoeffs );
+	  setBallAngleValue [ 0 ] = true;
+	  SmartDashboard.putNumber( "ballAngleValue", ballAngleValue[ 0 ] );
+      }
 
     //Camera
       //Puts ball angle value onto the SmartDashboard.
