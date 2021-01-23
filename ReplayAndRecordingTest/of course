@@ -1,5 +1,5 @@
 try {			
-        FileWriter csvWriter = new FileWriter("\\Users\\mathi\\Desktop\\test.csv");
+        FileWriter csvWriter = new FileWriter("test.csv");
         csvWriter.append("Links, AI Summary \n");
         
         for (int i = 0; i < al.size(); i++) {
