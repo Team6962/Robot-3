@@ -31,11 +31,11 @@ public void autonomousPeriodic() {
     long now = (System.currentTimeMillis() - start);
 
     int step = (int) Math.floor(now / clock); // index of path we're on or going through
+    double substep = (now % clock) / clock; // % of the way through current path step
+    
     if (step < path.size() - 1) {
         int[] current = path.get(step);
         int[] next = path.get(step + 1);
-
-        double substep = (now % clock) / clock; // % of the way through current path step
 
         double targetLeft = (next[0] - current[0]) * substep;
         double realLeft = encoder1.getDistance() - current[0];
@@ -54,8 +54,6 @@ public void autonomousPeriodic() {
         myDrive.tankDrive(correctionLeft, correctionRight);
     } else if (step < path.size()) {
         int[] target = path.get(step);
-
-        double substep = (now % clock) / clock; // % of the way through current path step
 
         double targetLeft = target[0] * substep;
         double realLeft = encoder1.getDistance();
