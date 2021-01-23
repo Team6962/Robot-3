@@ -1,1 +1,20 @@
-of course
+try {			
+        FileWriter csvWriter = new FileWriter("\\Users\\mathi\\Desktop\\test.csv");
+        csvWriter.append("Links, AI Summary \n");
+        
+        for (int i = 0; i < al.size(); i++) {
+          for (int j = 0; j < al.get(i).length; j++) {
+            csvWriter.append(al.get(i)[j]);
+            
+            if (j != al.get(i).length-1) {
+              csvWriter.append(", ");
+            }
+          }
+          csvWriter.append("\n");
+        }
+        
+        csvWriter.flush();
+        csvWriter.close();
+      } catch (Exception e) {
+        System.out.println(e + "ERROR IN WRITING FILE.");
+      }
