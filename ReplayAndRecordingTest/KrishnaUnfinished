@@ -1,0 +1,11 @@
+public void autonomousPeriodic(){
+    long start = (System.currentTimeMillis()-start);
+    int index = Math.floor( now/time ) / time;
+    int lval = encoder1;
+    int changelval = tval - lval;
+
+    int rval = encoder2;
+    int changerval = tval - lval;
+
+    myDrive.tankDrive(correctionLeft, correctionRight);
+}
