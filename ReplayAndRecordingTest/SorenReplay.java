@@ -38,16 +38,16 @@ public void autonomousPeriodic() {
         double substep = (now % clock) / clock; // % of the way through current path step
 
         double targetLeft = (next[0] - current[0]) * substep;
-        int realLeft = encoder1.get() - current[0];
-        if (realLeft == 0)
-            realLeft = 1;
+        double realLeft = encoder1.getDistance() - current[0];
+        if (realLeft <= 0)
+            realLeft = 0.01;
         double correctionLeft = targetLeft / realLeft;
         correctionLeft = ((correctionLeft - 1) * correctionFactor) + 1;
 
         double targetRight = (next[1] - current[1]) * substep;
-        int realRight = encoder2.get() - current[1];
-        if (realRight == 0)
-            realRight = 1;
+        double realRight = encoder2.getDistance() - current[1];
+        if (realRight <= 0)
+            realRight = 0.01;
         double correctionRight = targetRight / realRight;
         correctionRight = ((correctionRight - 1) * correctionFactor) + 1;
 
@@ -58,16 +58,16 @@ public void autonomousPeriodic() {
         double substep = (now % clock) / clock; // % of the way through current path step
 
         double targetLeft = target[0] * substep;
-        int realLeft = encoder1.get();
-        if (realLeft == 0)
-            realLeft = 1;
+        double realLeft = encoder1.getDistance();
+        if (realLeft <= 0)
+            realLeft = 0.1;
         double correctionLeft = targetLeft / realLeft;
         correctionLeft = ((correctionLeft - 1) * correctionFactor) + 1;
 
         double targetRight = target[1] * substep;
-        int realRight = encoder2.get();
-        if (realRight == 0)
-            realRight = 1;
+        double realRight = encoder2.getDistance();
+        if (realRight <= 0)
+            realRight = 0.1;
         double correctionRight = targetRight / realRight;
         correctionRight = ((correctionRight - 1) * correctionFactor) + 1;
 
