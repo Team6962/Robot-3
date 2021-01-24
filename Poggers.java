@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj.Encoder;
 
 import java.io.FileWriter;
 import java.io.File;
+import java.io.IOException;
 
 public class Robot extends TimedRobot {
 
@@ -86,6 +87,7 @@ public class Robot extends TimedRobot {
   long start;
   ArrayList<int[]> path;
   double correctionFactor;
+  ArrayList<int[]> dataValues;
 
   //Testing values
     int counter = 0;
@@ -108,6 +110,7 @@ public class Robot extends TimedRobot {
   @Override
   public void robotInit() {
 
+    dataValues = new ArrayList<int[]>();
     System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
     cameraMatrix = new Mat();
     distCoeffs = new Mat();
@@ -156,21 +159,15 @@ public class Robot extends TimedRobot {
   public void autonomousInit() {
 
     start = System.currentTimeMillis();
-    clock = 500;
+    clock = 50;
     correctionFactor = 0.25;
     path = new ArrayList<int[]>();
 
-    Scanner sc;
-    try {
-        sc = new Scanner(new File("[FILEPATH]"));
-    } catch (Exception e) {
-        sc = new Scanner("0,0\n0,5\n10,20\n20,25\n30,30");
-    }
-    sc.useDelimiter(",");
-    while (sc.hasNext()) {
-        path.add(new int[] { sc.nextInt(), sc.nextInt() });
-    }
-    sc.close();
+    System.out.println(dataValues.size());
+
+    path = dataValues;
+
+    
    
   }
 
@@ -309,19 +306,18 @@ public class Robot extends TimedRobot {
 
   }
 
-  public void recordValues(Encoder encoder1, Encoder encoder2, ArrayList<String[]> arraylist) {
+  public void recordValues(Encoder encoder1, Encoder encoder2, ArrayList<int[]> arraylist) {
     long now = System.currentTimeMillis();
     if ((now-start) % 50 == 0) {
-      arraylist.add(new String[] {String.valueOf(encoder1.getDistance()), String.valueOf(encoder2.getDistance())});
+      System.out.println("a thing has been written");
+      arraylist.add(new int[] {(int)encoder1.getDistance(), (int)encoder2.getDistance()});
     }
   }
 
   public void saveValues(ArrayList<String[]> arrayList) {
     System.out.println("Saving values.");
     try {			
-        FileWriter csvWriter = new FileWriter("test.csv");
-        csvWriter.append("Links, AI Summary \n");
-         
+        FileWriter csvWriter = new FileWriter("test.csv");  
         for (int i = 0; i <arrayList.size(); i++) {
           for (int j = 0; j <arrayList.get(i).length; j++) {
             csvWriter.append(arrayList.get(i)[j]);
@@ -336,8 +332,9 @@ public class Robot extends TimedRobot {
         csvWriter.flush();
         csvWriter.close();
     }
-     catch (Exception e) {
+     catch (IOException e) {
       System.out.println(e + "ERROR IN WRITING FILE.");
+      e.printStackTrace();
     }
     System.out.println("DONE WRITING FILE.");
   }
@@ -357,15 +354,12 @@ public class Robot extends TimedRobot {
       Color detectedColor = colorSensor.getColor();
       String colorString = getColor();
       DriverStation ds = DriverStation.getInstance();
-      ArrayList<String[]> dataValues = new ArrayList<String[]>();
+      
 
 
       recordValues(encoder1, encoder2, dataValues);
-      if ( joystick1.getRawButton(12) && (infLoopProt == 0)) {
-        saveValues(dataValues);
-        infLoopProt++;
-      }
-      
+      //saveValues(dataValues);
+            
       if( !lastColor.equals( colorString ) && ( colorString.equals( "Red" ) || colorString.equals( "Blue" ) || colorString.equals( "Yellow" ) || colorString.equals( "Green" ) ) ) {
 
         colorCount++;
